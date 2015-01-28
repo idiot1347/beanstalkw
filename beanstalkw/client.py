@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import json
-import thread.allocate_lock
+import thread
  
 import beanstalkc
 
