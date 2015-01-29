@@ -1,7 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import json
 import thread
  
 import beanstalkc
@@ -20,12 +19,12 @@ class Client(object):
             self.connection.use(job.tube)
             self.tube = job.tube
         return self.connection.put(
-            json.dumps(job.body),
+            job.body,
             job.priority,
             job.delay,
             job.ttr)
 
-    def put(self, job):
+    def enqueue_job(self, job):
         with self.write_lock:
             try:
                 return self._put(job)
@@ -33,6 +32,3 @@ class Client(object):
                 self.connection.reconnect()
                 self.current_tube = 'default'
                 return self._put(job)
-
-    def enqueue(self, func, args, kwargs, tube, priority, delay, ttr):
-        return self.put(job.Job(func, args, kwargs, priority, delay, ttr))
