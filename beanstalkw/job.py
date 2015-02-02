@@ -3,7 +3,7 @@
 
 import json
 
-DEFAULT_PRIORITY = 2**32
+DEFAULT_PRIORITY = 2**32 - 1
 DEFAULT_TTR = 120
 
 
