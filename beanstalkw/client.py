@@ -17,7 +17,7 @@ class Client(object):
     def _put(self, job):
         if self.current_tube != job.tube:
             self.connection.use(job.tube)
-            self.tube = job.tube
+            self.current_tube = job.tube
         return self.connection.put(
             job.body,
             job.priority,
