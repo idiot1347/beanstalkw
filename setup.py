@@ -6,7 +6,7 @@ from setuptools import setup
 
 setup(
     name='beanstalkw',
-    version='0.2.0',
+    version='0.3.0',
     url='https://github.com/BeanYoung/beanstalkw',
     license='MIT',
     author='Bingyu Chen',
