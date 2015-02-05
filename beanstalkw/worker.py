@@ -58,13 +58,9 @@ class Worker(BaseWorker):
 
 
 class FailedWorker(BaseWorker):
-    def __init__(self, host, port, tubes, cache_time):
-        super(FailedWorker, self).__init__(host, port, tubes)
-        self.cache_time = cache_time
-
     def reserve(self, timeout):
         for i in range(timeout):
             job = self.beanstalk.peek_buried()
-            if job and job.stats()['buries'] > self.cache_time:
+            if job:
                 return job
             time.sleep(1)
