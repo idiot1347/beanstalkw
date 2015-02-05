@@ -7,29 +7,29 @@ import time
 import beanstalkc
 
 
-class Worker(object):
+class BaseWorker(object):
     def __init__(self, host, port, tubes):
         self.host = host
         self.port = port
         self.tubes = tubes
+        self.beanstalk = None
 
     def work(self):
         while True:
-            beanstalk = None
             try:
-                if beanstalk:
-                    beanstalk.reconnect()
+                if self.beanstalk:
+                    self.beanstalk.reconnect()
                 else:
-                    beanstalk = \
+                    self.beanstalk = \
                         beanstalkc.Connection(self.host, self.port)
                 for tube in self.tubes:
-                    beanstalk.watch(tube)
-                for tube in beanstalk.watching():
+                    self.beanstalk.watch(tube)
+                for tube in self.beanstalk.watching():
                     if tube not in self.tubes:
-                        beanstalk.ignore(tube)
+                        self.beanstalk.ignore(tube)
 
                 while True:
-                    job = beanstalk.reserve(timeout=10)
+                    job = self.reserve(timeout=10)
                     if not job:
                         time.sleep(2)
                         continue
@@ -40,10 +40,31 @@ class Worker(object):
                         job.bury()
             except beanstalkc.SocketError, e:
                 time.sleep(2)
-                if beanstalk:
-                    beanstalk.close()
-                beanstalk = None
+                if self.beanstalk:
+                    self.beanstalk.close()
+                self.beanstalk = None
             time.sleep(2)
+
+    def reserve(self, timeout):
+        pass
 
     def execute_job(self, job):
         pass
+
+
+def Worker(BaseWorker):
+    def reserve(self, timeout):
+        return self.beanstalk.reserve(timeout)
+
+
+def FailedWorker(BaseWorker):
+    def __init__(self, host, port, tubes, cache_time):
+        super(FailedWorker, self).__init__(host, port, tubes)
+        self.cache_time = cache_time
+
+    def reserve(self, timeout):
+        for i in range(timeout):
+            job = self.beanstalk.peek_buried()
+            if job and job.stats()['buries'] > self.cache_time:
+                return job
+            time.sleep(1)
