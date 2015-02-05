@@ -52,12 +52,12 @@ class BaseWorker(object):
         pass
 
 
-def Worker(BaseWorker):
+class Worker(BaseWorker):
     def reserve(self, timeout):
         return self.beanstalk.reserve(timeout)
 
 
-def FailedWorker(BaseWorker):
+class FailedWorker(BaseWorker):
     def __init__(self, host, port, tubes, cache_time):
         super(FailedWorker, self).__init__(host, port, tubes)
         self.cache_time = cache_time
