@@ -1,18 +1,23 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import json
 import time
 
 import beanstalkc
 
 
 class BaseWorker(object):
-    def __init__(self, host, port, tubes):
+    def __init__(self, host, port, tubes, log_handler=None):
         self.host = host
         self.port = port
         self.tubes = tubes
         self.beanstalk = None
+        if log_handler is not None:
+            self.log_handler = log_handler
+        self.log_info = dict()
+        self.log_info['tubes'] = tubes
+        self.log_info['host'] = host
+        self.log_info['port'] = port
 
     def work(self):
         while True:
@@ -25,10 +30,15 @@ class BaseWorker(object):
                         time.sleep(2)
                         continue
                     try:
+                        self.log_info['job_body'] = job.body
                         self.execute_job(job)
                         job.delete()
                     except Exception, e:
+                        self.log_info['exception'] = unicode(e)
                         job.bury()
+                    finally:
+                        if self.log_handler:
+                            self.log_handler.info(self.log_info)
             except beanstalkc.SocketError, e:
                 pass
             time.sleep(2)
